@@ -12,24 +12,24 @@ import (
 )
 
 type Scripts struct{
-	eslint string
-	stylelint string
-	lint string
-	test string
-	build string
-	publish string
-	start string
+	Eslint string `json:"eslint"`
+	Stylelint string `json:"stylelint"`
+	Lint string `json:"lint"`
+	Test string `json:"test"`
+	Build string `json:"build"`
+	Publish string `json:"publish"`
+	Start string `json:"start"`
 }
 //"build:debug",  //publish:debug,//"test:watch",
 type PackageJson struct{
-  name string `name:"folder"`
-  scripts Scripts `json:"scripts"`
+  Name string `json:"name"`
+  Scripts Scripts `json:"scripts"`
 }
 
 type Project struct{
-  folder string `json:"folder"`
+  Folder string `json:"folder"`
   hasPackageJson bool `json:"hasPackageJson"`
-  packagejson PackageJson `json:"packagejson"`
+  Packagejson PackageJson `json:"packagejson"`
 }
 
 
@@ -80,15 +80,15 @@ func RetrieveDirectories(name string) ([]Project, error){
 			 packagefilePath := filepath.Join(name,p,"package.json")
 			 file,err := RetrieveContents(packagefilePath) //get the byte
 			 if err == nil {
-			        json.Unmarshal(file, packageJson)
-					fmt.Printf("%s\n",packageJson.name)
+			        json.Unmarshal(file, &packageJson)
+					fmt.Printf("package Name: %s\n",packageJson.Name)
 					data := Project{filepath.Dir(packagefilePath),true,packageJson}
-					fmt.Printf("name added: %s \n",data.folder)
+					fmt.Printf("filename added: %s \n",data.Folder)
 					projects = append(projects,data)
 			 }else{
 				 log.Fatal(err)
 			 }
-			 fmt.Printf("filename: %s \n --- %s \n", p,child);
+			 //fmt.Printf("filename: %s \n --- %s \n", p,child);
 		   }
 		}
 	}else{
