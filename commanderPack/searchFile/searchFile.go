@@ -19,6 +19,7 @@ type Scripts struct{
 	Build string `json:"build"`
 	Publish string `json:"publish"`
 	Start string `json:"start"`
+	Serve string `json:"serve"`
 }
 //"build:debug",  //publish:debug,//"test:watch",
 type PackageJson struct{
@@ -28,47 +29,43 @@ type PackageJson struct{
 
 type Project struct{
   Folder string `json:"folder"`
-  hasPackageJson bool `json:"hasPackageJson"`
+  HasPackageJson bool `json:"hasPackageJson"`
   Packagejson PackageJson `json:"packagejson"`
 }
 
-
+type ProjectSlice []Project
 
 func RetrieveContents(name string) ([]byte, error){
 //filename := filepath.Base(path)
  fmt.Printf("retrieve file data %s \n",name)
- f,err := os.OpenFile(name,os.O_RDONLY,0)//
+ f,err := os.OpenFile(name,os.O_RDONLY,0)
+ defer f.Close()
  if err != nil {
    fmt.Fprintf(os.Stderr,"%v, Can't open %s: error %\n",os.Args[0],name,err)
    os.Exit(1)
    return nil,err
-   //panic(err)
  }
- defer f.Close()
  contents,err := ioutil.ReadAll(f)
  if err != nil{
    log.Fatal(err)
    return nil,err
  }
- //fmt.Printf("%s", contents)
  return contents,nil
 }
 
 
-func RetrieveDirectories(name string) ([]Project, error){
+func RetrieveDirectories(projects *[]Project,name string) (error){
   var base = "./"
-  projects := make([]Project,10,100)
-  
   path,err := filepath.Abs(base)
   if err != nil{
    log.Fatal(err)
-   return nil,err
+   return err
  }
-  fmt.Printf("path: %s \n\n", path);
+  fmt.Printf("path: %s \n\n", path)
  directories,err := readDirNames(name)
   if err != nil{
    log.Fatal(err)	
-   return nil,err
+   return err
  }
  for _,p := range directories {
 	//fmt.Printf("filename: %s \n", p);
@@ -79,12 +76,14 @@ func RetrieveDirectories(name string) ([]Project, error){
 		     var packageJson PackageJson
 			 packagefilePath := filepath.Join(name,p,"package.json")
 			 file,err := RetrieveContents(packagefilePath) //get the byte
-			 if err == nil {
+			 if err == nil && len(file) > 0 {
 			        json.Unmarshal(file, &packageJson)
 					fmt.Printf("package Name: %s\n",packageJson.Name)
 					data := Project{filepath.Dir(packagefilePath),true,packageJson}
 					fmt.Printf("filename added: %s \n",data.Folder)
-					projects = append(projects,data)
+					if len(data.Folder) > 0 {
+						*projects = append(*projects,data)
+					}
 			 }else{
 				 log.Fatal(err)
 			 }
@@ -99,18 +98,19 @@ func RetrieveDirectories(name string) ([]Project, error){
 	
 		
  }
- return projects,nil
+ return nil
 }
 
 // readDirNames reads the directory named by dirname and returns
 // a sorted list of directory entries.
 func readDirNames(dirname string) ([]string, error) {
    f, err := os.Open(dirname)
+   defer f.Close()
    if err != nil {
      return nil, err
    }
    names, err := f.Readdirnames(-1)
-   f.Close()
+
    if err != nil {
    	return nil, err
    }
