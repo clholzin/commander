@@ -237,7 +237,7 @@ func pumpStdout(ws *websocket.Conn, r io.Reader, done chan struct{}) {
 	ws.SetPongHandler(func(string) error { ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	defer func() {
 	}()
-	s := bufio.NewScanner(r)
+
 	for s.Scan() {
 		ws.SetWriteDeadline(time.Now().Add(writeWait))
 		bytes := s.Bytes()
